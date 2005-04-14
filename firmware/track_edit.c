@@ -41,9 +41,6 @@
 #include "eeprom.h"
 #include "synth.h"
 #include "delay.h"
-#include "midi.h"
-#include "dinsync.h"
-
 
 extern uint8_t function, bank;
 
@@ -85,22 +82,13 @@ void do_track_edit(void) {
   while (1) {
     read_switches();
 
-      // oops i guess they want something else, return!
     if (function != EDIT_TRACK_FUNC) {
-      // stop playing any notes
-      turn_off_tempo();
-      play_loaded_track = play_loaded_pattern = 0;
-
-      // turn off notes and midi/dinsync
+      // oops i guess they want something else, return!
       note_off(0);
-      dinsync_stop();
-      midi_stop();
-
-      // clear the LEDs
       clear_bank_leds();
       clear_key_leds();
       clock_leds();
-
+      turn_off_tempo();
       return;
     }
     
@@ -143,30 +131,18 @@ void do_track_edit(void) {
       }
     }
     
-    if ((just_pressed(KEY_NEXT) || just_pressed(KEY_PREV)) && !in_run_mode) {
+    if (just_pressed(KEY_STEP) && !in_run_mode) {
       note_off(0);  // if something -was- playing, kill it
 
       if (in_stepwrite_mode) {
-	if (just_pressed(KEY_NEXT)) {
-	  // step forward in the track
-	  if (((curr_track_index+1) >= TRACK_SIZE) ||
-	      (track_buff[curr_track_index] == END_OF_TRACK))
-	    curr_track_index = 0;   // got to the end of the track, loop back to beginning
-	  else
-	    curr_track_index++;
-	} else {
-	  // step backwards in the track
-	  if (curr_track_index == 0) {
-	    // search thru the buffer -forward- to find the EOT
-	    while ((curr_track_index+1 < TRACK_SIZE) && 
-		   (track_buff[curr_track_index] != END_OF_TRACK))
-	      curr_track_index++;
-	  } else {
-	    curr_track_index--;
-	  }
-	}
-      } else if (just_pressed(KEY_NEXT)) {
-	// starting stepwrite mode
+	// step forward in the track
+	if (((curr_track_index+1) >= TRACK_SIZE) ||
+	    (track_buff[curr_track_index] == END_OF_TRACK))
+	  curr_track_index = 0;            // got to the end of the track, loop back to beginning
+	else
+	  curr_track_index++;
+      } else {
+	// starting stepwrite mdoe
 	start_track_stepwrite_mode();
 	curr_track_index = 0;
       }
@@ -240,7 +216,7 @@ void do_track_edit(void) {
     }
   
     if (in_stepwrite_mode) {
-      set_led(LED_NEXT);                                         // show we're in this mode
+      set_led(LED_STEP);                                         // show we're in this mode
       
       // handle RAS keypresses -> modifications to current pattern
       if (curr_patt != END_OF_TRACK) {
@@ -371,7 +347,7 @@ static void start_track_stepwrite_mode(void) {
 
 static void stop_track_stepwrite_mode(void) {
   in_stepwrite_mode = FALSE;
-  clear_led(LED_NEXT);
+  clear_led(LED_STEP);
   clear_all_leds();
   clear_blinking_leds();
 }

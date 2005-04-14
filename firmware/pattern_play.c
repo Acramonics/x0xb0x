@@ -114,23 +114,21 @@ void do_pattern_play(void) {
     read_switches();
 
     if (function_changed) {
-      playing = 0;
-
-      dinsync_stop();
-      midi_stop();
-      curr_pitch_shift = next_pitch_shift = 0;
-      all_accent = all_rest = all_slide = 0;
-
       clear_all_leds();
       clear_blinking_leds();
       clock_leds();
+      playing = 0;
+      dinsync_stop();
+      midi_putchar(MIDI_STOP);
+      curr_pitch_shift = next_pitch_shift = 0;
+      all_accent = all_rest = all_slide = 0;
       return;
     }
 
     // detect 'tap tempo' requests by timing between KEY_DONE strikes
     if (just_pressed(KEY_DONE)) {
       if ((tap_tempo_timer < 3334) //  more than 3s between taps = 20BPM
-	  && (tap_tempo_timer > 333)) // less than .3ms between taps = 200BPM
+	  && (tap_tempo_timer > 333)) // less than .3ms between taps = 200BP<
 	{
 	  tap_tempo_timer = 60000UL/tap_tempo_timer; // convert to BPM
 	  change_tempo(tap_tempo_timer);
@@ -139,11 +137,11 @@ void do_pattern_play(void) {
     }
 
     // start a new chain if just pressed
-    if (just_pressed(KEY_CHAIN)) {
+    if (just_pressed(KEY_X)) {
       buff_patt_chain_len = 0;  // 'start' to write a new chain
     }
 
-    if (just_released(KEY_CHAIN)) {
+    if (just_released(KEY_X)) {
       // make the 'next pattern' a chain!
       for (i=0; i<MAX_PATT_CHAIN; i++)
 	next_pattern_chain[i] = buff_pattern_chain[i];
@@ -158,10 +156,10 @@ void do_pattern_play(void) {
       }
     }
 
-    if (is_pressed(KEY_CHAIN)) {
+    if (is_pressed(KEY_X)) {
       clear_notekey_leds();
       clear_blinking_leds();
-      set_led(LED_CHAIN);
+      set_led(LED_X);
 
       // display the current pattern chain
       for (i=0; i<buff_patt_chain_len; i++) {
@@ -197,7 +195,7 @@ void do_pattern_play(void) {
       // clear any pattern indicator leds
       clear_notekey_leds();
       clear_blinking_leds();
-      clear_led(LED_CHAIN);
+      clear_led(LED_X);
 
       if (!playing)
 	curr_pitch_shift = next_pitch_shift;
@@ -254,7 +252,7 @@ void do_pattern_play(void) {
       // indicate current pattern & next pattern & shift 
       clear_notekey_leds();
       clear_blinking_leds();
-      clear_led(LED_CHAIN);
+      clear_led(LED_X);
 
       if (!chains_equiv(next_pattern_chain, curr_pattern_chain)) {
 	if (next_pattern_chain[1] == 0xFF && curr_pattern_chain[1] == 0xFF) {
@@ -330,7 +328,7 @@ void do_pattern_play(void) {
 	playing = 0;
 	play_loaded_pattern = 0;
 	note_off(0);
-	midi_stop();
+	midi_putchar(MIDI_STOP);
 	if (sync != DIN_SYNC) 
 	  dinsync_stop();
       }

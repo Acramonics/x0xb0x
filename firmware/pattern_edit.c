@@ -40,8 +40,6 @@
 #include "eeprom.h"
 #include "synth.h"
 #include "delay.h"
-#include "dinsync.h"
-#include "midi.h"
 
 extern uint8_t function, bank;
 
@@ -78,18 +76,10 @@ void do_pattern_edit(void) {
   while (1) {
     if (function != EDIT_PATTERN_FUNC) {
       // oops i guess they want something else, return!
-      turn_off_tempo();
-      play_loaded_pattern = FALSE;
-
-      // turn off all sound & output signals
-      note_off(0);
-      dinsync_stop();
-      midi_stop();
-
-      // clear the LEDs
       clear_bank_leds();
       clear_key_leds();
       clock_leds();
+      turn_off_tempo();
       return;
     }
 
@@ -111,7 +101,7 @@ void do_pattern_edit(void) {
       set_led(LED_RS); 
 
     if (in_stepwrite_mode)
-      set_led(LED_NEXT); 
+      set_led(LED_STEP); 
 
 
     // if they pressed one of the 8 bottom buttons (location select)
@@ -130,13 +120,13 @@ void do_pattern_edit(void) {
     }
 
     // if they hit random, fill pattern buffer with random data
-    if (just_pressed(KEY_CHAIN) && in_runwrite_mode) {
-      set_led(LED_CHAIN);
+    if (just_pressed(KEY_RAND) && in_runwrite_mode) {
+      set_led(LED_RAND);
       for (i=0; i< PATT_SIZE; i++) {
 	pattern_buff[i] = random();
       }
-    } else if (just_released(KEY_CHAIN) && in_runwrite_mode) {
-      clear_led(LED_CHAIN);
+    } else if (just_released(KEY_RAND) && in_runwrite_mode) {
+      clear_led(LED_RAND);
     }
 
     
@@ -262,31 +252,18 @@ void do_pattern_edit(void) {
     }
 
 
-    // if in step mode & they press 'next' or 'prev, then step fwd/back, otherwise start stepmode
-    if (just_pressed(KEY_NEXT) || just_pressed(KEY_PREV)) {
+    // if in step mode & they press step, then step, otherwise start stepmode
+    if (just_pressed(KEY_STEP)) {
       if (in_stepwrite_mode) {
-	// turn off the last note
 	note_off(0);
 	delay_ms(1);
 	//putstring("step");
-	if (just_pressed(KEY_NEXT)) { 
-	  // get next note from pattern
-	  if (((curr_pattern_index+1) >= PATT_SIZE) ||
-	      (pattern_buff[curr_pattern_index] == END_OF_PATTERN))
-	    curr_pattern_index = 0;
-	  else
-	    curr_pattern_index++;
-	} else {
-	  // get previous note from pattern
-	  if (curr_pattern_index == 0) {
-	    // search thru the buffer -forward- to find the EOP byte
-	    while ((curr_pattern_index < PATT_SIZE-1) && 
-		   (pattern_buff[curr_pattern_index] != END_OF_PATTERN))
-	      curr_pattern_index++;
-	  } else {
-	    curr_pattern_index--;
-	  }
-	}
+	if (((curr_pattern_index+1) >= PATT_SIZE) ||
+	    (pattern_buff[curr_pattern_index] == 0xFF))
+	  curr_pattern_index = 0;
+	else
+	  curr_pattern_index++;
+
 	clear_bank_leds();
 	set_bank_led(curr_pattern_index);
 	//putstring("i = "); putnum_ud(curr_pattern_index); putstring("\n\r");
@@ -304,7 +281,7 @@ void do_pattern_edit(void) {
 	  
 	  set_note_led(curr_note);
 	}
-      } else if (just_pressed(KEY_NEXT) && !in_runwrite_mode) {
+      } else if (! in_runwrite_mode) {
 	start_stepwrite_mode();
 
 	curr_pattern_index = 0;

@@ -61,16 +61,16 @@ const static uint8_t bank_led_tab[16] = {
 };
 
 const static uint8_t key_led_tab[24] = {
-  LED_CHAIN,
+  LED_X,
   LED_RS,
   LED_TEMPO,
-  LED_PREV,
+  LED_RAND,
   LED_C,
   LED_D ,
   LED_E,
   LED_F,
 
-  LED_NEXT,
+  LED_STEP,
   LED_CS, 
   LED_DS, 
   LED_FS, 
