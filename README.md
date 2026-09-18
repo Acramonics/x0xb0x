@@ -6,6 +6,8 @@ x0xb0x - Full GitHub Repo
 This repository is cloned from that CVS repo at
 https://sourceforge.net/p/x0xb0x/code/
 
+It is licensed under the [MIT Open Source Licence](./LICENCE.md). See https://en.wikipedia.org/wiki/MIT_License
+
 x0xb0x is a full reproduction of the original Roland TB-303
 MIDI-controlled synthesizer, with a fully functional sequencer. Full
 details are at https://www.ladyada.net/make/x0xb0x/
